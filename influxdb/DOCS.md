@@ -1,14 +1,11 @@
 # Home Assistant Community Add-on: InfluxDB
 
-InfluxDB is an open source time series database optimized for high-write-volume.
-It's useful for recording metrics, sensor data, events,
-and performing analytics. It exposes an HTTP API for client interaction and is
-often used in combination with Grafana to visualize the data.
+InfluxDB 3 is a time series database optimized for high-write-volume data such
+as metrics, sensor data, and events. It exposes an HTTP API for client
+interaction and is often used in combination with Grafana to visualize data.
 
-This add-on comes with Chronograf & Kapacitor pre-installed as well. Which
-gives you a nice InfluxDB admin interface for managing your users, databases,
-data retention settings, and lets you peek inside the database using the
-Data Explorer.
+This add-on includes the InfluxDB 3 Explorer UI for administration, querying,
+and dashboards.
 
 ## Installation
 
@@ -34,13 +31,13 @@ Example add-on configuration:
 ```yaml
 log_level: info
 auth: true
-reporting: true
 ssl: true
 certfile: fullchain.pem
 keyfile: privkey.pem
-envvars:
-  - name: INFLUXDB_HTTP_LOG_ENABLED
-    value: "true"
+edition: core
+license_type: home
+default_database: homeassistant
+default_write_api: v1
 ```
 
 **Note**: _This is just an example, don't copy and paste it! Create your own!_
@@ -69,11 +66,47 @@ Enable or disable InfluxDB user authentication.
 
 **Note**: _Turning this off is NOT recommended!_
 
-### Option: `reporting`
+### Option: `edition`
 
-This option allows you to disable the reporting of usage data to InfluxData.
+Selects the InfluxDB 3 edition to run: `core` or `enterprise`. If you provide
+`license_email` or `license_file`, the add-on will automatically use
+Enterprise.
 
-**Note**: _No data from user databases is ever transmitted!_
+### Option: `license_email`
+
+Email address used for Enterprise license verification. Used together with
+`license_type`.
+
+### Option: `license_file`
+
+Path to a license file (for Enterprise). When provided, it overrides
+`license_email` and `license_type`.
+
+### Option: `license_type`
+
+License type for Enterprise: `home`, `trial`, or `commercial`.
+
+### Option: `admin_token`
+
+Optional admin token. If omitted, the add-on generates a token during first
+startup and stores it in `/data/influxdb3/admin-token.json`.
+
+### Option: `default_database`
+
+The database to create on startup (default: `homeassistant`).
+
+### Option: `default_write_api`
+
+The default compatibility API to document for writes: `v1` or `v2`.
+This add-on defaults to `v1`.
+
+### Option: `node_id`
+
+The InfluxDB node identifier (default: `ha-node`).
+
+### Option: `cluster_id`
+
+Enterprise cluster identifier (default: `ha-cluster`).
 
 ### Option: `ssl`
 
@@ -94,27 +127,6 @@ The private key file to use for SSL.
 
 **Note**: _The file MUST be stored in `/ssl/`, which is the default_
 
-### Option: `envvars`
-
-This allows the setting of Environment Variables to control InfluxDB
-configuration as documented at:
-
-<https://docs.influxdata.com/influxdb/v1.7/administration/config/#configuration-settings>
-
-**Note**: _Changing these options can possibly cause issues with you instance.
-USE AT YOUR OWN RISK!_
-
-These are case sensitive.
-
-#### Sub-option: `name`
-
-The name of the environment variable to set which must start with `INFLUXDB_`
-
-#### Sub-option: `value`
-
-The value of the environment variable to set, set the Influx documentation for
-full details. Values should always be entered as a string (even true/false values).
-
 ### Option: `leave_front_door_open`
 
 Adding this option to the add-on configuration allows you to disable
@@ -131,13 +143,10 @@ state changes to an InfluxDB database.
 
 You need to do the following steps in order to get this working:
 
-- Click on "OPEN WEB UI" to open the admin web-interface provided by this add-on.
-- On the left menu click on the "InfluxDB Admin".
-- Create a database for storing Home Assistant's data in, e.g., `homeassistant`.
-- Go to the users tab and create a user for Home Assistant,
-  e.g., `homeassistant`.
-- Add "ALL" to "Permissions" of the created user, to allow writing to your
-  database.
+- Click on "OPEN WEB UI" to open the InfluxDB 3 Explorer UI.
+- Ensure the default database (e.g., `homeassistant`) exists.
+- Copy the admin token from `/data/influxdb3/admin-token.json` or set your
+  own `admin_token` in the add-on configuration.
 
 Now we've got this in place, add the following snippet to your Home Assistant
 `configuration.yaml` file.
@@ -145,10 +154,10 @@ Now we've got this in place, add the following snippet to your Home Assistant
 ```yaml
 influxdb:
   host: a0d7b954-influxdb
-  port: 8086
+  port: 8181
   database: homeassistant
   username: homeassistant
-  password: <yourpassword>
+  password: <admin_token>
   max_retries: 3
   default_measurement: state
 ```
@@ -158,15 +167,21 @@ Restart Home Assistant.
 You should now see the data flowing into InfluxDB by visiting the web-interface
 and using the Data Explorer.
 
+**Note**: The v1 compatibility API uses the token as the password and ignores
+the username.
+
+If you prefer the v2 compatibility API, use `/api/v2/write` with the admin
+token in the `Authorization: Token ...` header and set `default_write_api` to
+`v2` in the add-on configuration.
+
 Full details of the Home Assistant integration can be found here:
 
 <https://www.home-assistant.io/integrations/influxdb/>
 
 ## Known issues and limitations
 
-- While the Chronograph interface supports SSL, currently, the add-on does
-  not support having SSL on InfluxDB. This limitation is caused by
-  Chronograf and we are still looking into a proper solution for this.
+- The add-on only configures SSL for the Explorer UI (via NGINX). The InfluxDB
+  HTTP API itself does not enable TLS by default.
 
 ## Changelog & Releases
 

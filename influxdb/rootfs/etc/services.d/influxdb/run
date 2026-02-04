@@ -1,19 +1,63 @@
 #!/command/with-contenv bashio
 # ==============================================================================
-# Home Assistant Community Add-on: InfluxDB
-# Runs the InfluxDB Server
+# Home Assistant Community Add-on: InfluxDB 3
+# Runs the InfluxDB 3 server
 # ==============================================================================
-declare name
-declare value
+set -euo pipefail
 
-for envvar in $(bashio::config 'envvars|keys'); do
-    name=$(bashio::config "envvars[${envvar}].name")
-    value=$(bashio::config "envvars[${envvar}].value")
-    bashio::log.debug "Setting Env Variable ${name} to ${value}"
-    export "${name}=${value}"
-done
+declare edition
+declare cluster_id
+declare node_id
+declare license_email
+declare license_file
+declare license_type
+declare token_file
+declare binary
+declare -a args
 
-bashio::log.info 'Starting the InfluxDB...'
+edition="$(bashio::config 'edition')"
+license_email="$(bashio::config 'license_email')"
+license_file="$(bashio::config 'license_file')"
+license_type="$(bashio::config 'license_type')"
+cluster_id="$(bashio::config 'cluster_id')"
+node_id="$(bashio::config 'node_id')"
+token_file="/data/influxdb3/admin-token.json"
 
-# Run InfluxDB
-exec influxd
+if bashio::var.has_value "${license_email}" || bashio::var.has_value "${license_file}"; then
+    edition="enterprise"
+fi
+if ! bashio::var.has_value "${edition}"; then
+    edition="core"
+fi
+
+binary="/usr/local/bin/influxdb3-${edition}"
+if ! bashio::fs.file_exists "${binary}"; then
+    bashio::exit.nok "InfluxDB 3 ${edition} binary missing at ${binary}"
+fi
+
+args=(serve)
+args+=(--node-id "${node_id:-ha-node}")
+args+=(--object-store file)
+args+=(--data-dir /data/influxdb3/data)
+args+=(--plugin-dir /data/influxdb3/plugins)
+
+if bashio::config.false 'auth'; then
+    bashio::log.warning "InfluxDB authentication is disabled!"
+    bashio::log.warning "This is NOT recommended!!!"
+    args+=(--without-auth)
+else
+    args+=(--admin-token-file "${token_file}")
+fi
+
+if [ "${edition}" = "enterprise" ]; then
+    args+=(--cluster-id "${cluster_id:-ha-cluster}")
+    if bashio::var.has_value "${license_file}"; then
+        args+=(--license-file "${license_file}")
+    elif bashio::var.has_value "${license_email}"; then
+        args+=(--license-email "${license_email}")
+        args+=(--license-type "${license_type:-home}")
+    fi
+fi
+
+bashio::log.info "Starting InfluxDB 3 (${edition})..."
+exec "${binary}" "${args[@]}"

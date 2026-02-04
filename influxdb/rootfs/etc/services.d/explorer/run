@@ -1,0 +1,34 @@
+#!/command/with-contenv bashio
+# ==============================================================================
+# Home Assistant Community Add-on: InfluxDB 3
+# Runs the InfluxDB 3 Explorer backend
+# ==============================================================================
+set -euo pipefail
+
+declare session_file
+declare session_secret
+
+session_file="/data/explorer/session_secret"
+
+if bashio::fs.file_exists "${session_file}"; then
+    session_secret="$(cat "${session_file}")"
+else
+    session_secret="$(openssl rand -hex 32)"
+    echo "${session_secret}" > "${session_file}"
+fi
+
+cat <<'EOF' > /app-root/_master_app/assets/_.js
+Object.defineProperty(window, "restricted", {
+  value: false,
+  writable: false,
+  configurable: false,
+});
+EOF
+
+export SESSION_SECRET_KEY="${session_secret}"
+export DATABASE_URL="/data/explorer/sqlite.db"
+export NODE_ENV="production"
+export PORT="8888"
+
+bashio::log.info "Starting InfluxDB 3 Explorer backend..."
+exec node /app-root/_backend_app/main.js

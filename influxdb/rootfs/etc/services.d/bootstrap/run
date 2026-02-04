@@ -1,0 +1,46 @@
+#!/command/with-contenv bashio
+# ==============================================================================
+# Home Assistant Community Add-on: InfluxDB 3
+# Bootstrap default database
+# ==============================================================================
+set -euo pipefail
+
+declare token
+declare database
+
+s6-svwait -u -t 5000 /run/service//influxdb
+
+database="$(bashio::config 'default_database')"
+if ! bashio::var.has_value "${database}"; then
+    database="homeassistant"
+fi
+
+if bashio::fs.file_exists "/data/influxdb3/admin-token.txt"; then
+    token="$(cat /data/influxdb3/admin-token.txt)"
+else
+    bashio::log.warning "Admin token not found; skipping database bootstrap."
+    exit 0
+fi
+
+for i in {120..0}; do
+    if influxdb3 show databases --format jsonl --token "${token}" > /tmp/influxdb3-dbs.jsonl 2>/dev/null; then
+        break
+    fi
+    bashio::log.info "Waiting for InfluxDB 3 to become ready..."
+    sleep 2
+done
+
+if [[ "${i}" = 0 ]]; then
+    bashio::log.warning "InfluxDB 3 did not become ready, skipping database bootstrap."
+    exit 0
+fi
+
+if grep -q "\"name\"[[:space:]]*:[[:space:]]*\"${database}\"" /tmp/influxdb3-dbs.jsonl; then
+    bashio::log.info "Database '${database}' already exists."
+else
+    bashio::log.info "Creating database '${database}'..."
+    influxdb3 create database "${database}" --token "${token}" > /dev/null 2>&1 || \
+        bashio::log.warning "Failed to create database '${database}'."
+fi
+
+exec sleep infinity

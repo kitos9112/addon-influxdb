@@ -7,7 +7,6 @@
 ![Supports aarch64 Architecture][aarch64-shield]
 ![Supports amd64 Architecture][amd64-shield]
 ![Supports armhf Architecture][armhf-shield]
-![Supports armv7 Architecture][armv7-shield]
 ![Supports i386 Architecture][i386-shield]
 
 [![Github Actions][github-actions-shield]][github-actions]
@@ -30,12 +29,10 @@ It's useful for recording metrics, sensor data, events,
 and performing analytics. It exposes an HTTP API for client interaction and is
 often used in combination with Grafana to visualize the data.
 
-![Chronograf in the Home Assistant Frontend](images/screenshot.png)
+![InfluxDB 3 Explorer in the Home Assistant Frontend](images/screenshot.png)
 
-This add-on comes with Chronograf & Kapacitor pre-installed. These provide a
-nice InfluxDB admin interface for managing your users, databases, data
-retention settings, and let you peek inside the database using the Data
-Explorer.
+This add-on includes the InfluxDB 3 Explorer UI for administration, querying,
+and dashboards.
 
 [:books: Read the full add-on documentation][docs]
 
@@ -105,7 +102,6 @@ SOFTWARE.
 [aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
 [amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
 [armhf-shield]: https://img.shields.io/badge/armhf-no-red.svg
-[armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/hassio-addons/addon-influxdb.svg
 [commits]: https://github.com/hassio-addons/addon-influxdb/commits/main
 [contributors]: https://github.com/hassio-addons/addon-influxdb/graphs/contributors

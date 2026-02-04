@@ -3,8 +3,8 @@
 # Home Assistant Community Add-on: InfluxDB
 # Runs the NGINX daemon
 # ==============================================================================
-# Wait for Chronograf to become available
-bashio::net.wait_for 8889 localhost 9000
+# Wait for Explorer backend to become available
+bashio::net.wait_for 8888 localhost 9000
 
 bashio::log.info "Starting NGINX..."
 

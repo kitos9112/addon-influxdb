@@ -1,4 +1,8 @@
 ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base/amd64:7.7.1
+ARG EXPLORER_VERSION="1.6.2"
+# hadolint ignore=DL3006
+FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer
+
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
@@ -7,35 +11,32 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base system
 ARG BUILD_ARCH=amd64
-ARG INFLUXDB_VERSION="1.8.10"
-ARG CHRONOGRAF_VERSION="1.10.2"
-ARG KAPACITOR_VERSION="1.5.9-1"
+ARG INFLUXDB3_CORE_VERSION="3.8.0"
+ARG INFLUXDB3_ENTERPRISE_VERSION="3.8.0"
+ARG EXPLORER_VERSION
 RUN \
     apt-get update \
     && apt-get install -y --no-install-recommends \
         libnginx-mod-http-lua=1:0.10.23-1 \
         luarocks=3.8.0+dfsg1-1 \
         nginx=1.22.1-9 \
+        openssl \
         procps=2:4.0.2-3 \
     \
     && luarocks install lua-resty-http 0.15-0 \
     \
     && ARCH="${BUILD_ARCH}" \
     && if [ "${BUILD_ARCH}" = "aarch64" ]; then ARCH="arm64"; fi \
-    && if [ "${BUILD_ARCH}" = "armv7" ]; then ARCH="armhf"; fi \
     \
-    && curl -J -L -o /tmp/influxdb.deb \
-        "https://dl.influxdata.com/influxdb/releases/influxdb_${INFLUXDB_VERSION}_${ARCH}.deb" \
+    && curl -fsSL -o /tmp/influxdb3-core.tar.gz \
+        "https://dl.influxdata.com/influxdb/releases/influxdb3-core-${INFLUXDB3_CORE_VERSION}_linux_${ARCH}.tar.gz" \
+    && tar -xzf /tmp/influxdb3-core.tar.gz -C /tmp \
+    && install -m 0755 /tmp/influxdb3 /usr/local/bin/influxdb3-core \
     \
-    && curl -J -L -o /tmp/chronograf.deb \
-        "https://dl.influxdata.com/chronograf/releases/chronograf_${CHRONOGRAF_VERSION}_${ARCH}.deb" \
-    \
-    && curl -J -L -o /tmp/kapacitor.deb \
-        "https://dl.influxdata.com/kapacitor/releases/kapacitor_${KAPACITOR_VERSION}_${ARCH}.deb" \
-    \
-    && dpkg --install /tmp/influxdb.deb \
-    && dpkg --install /tmp/chronograf.deb \
-    && dpkg --install /tmp/kapacitor.deb \
+    && curl -fsSL -o /tmp/influxdb3-enterprise.tar.gz \
+        "https://dl.influxdata.com/influxdb/releases/influxdb3-enterprise-${INFLUXDB3_ENTERPRISE_VERSION}_linux_${ARCH}.tar.gz" \
+    && tar -xzf /tmp/influxdb3-enterprise.tar.gz -C /tmp \
+    && install -m 0755 /tmp/influxdb3 /usr/local/bin/influxdb3-enterprise \
     \
     && rm -fr \
         /tmp/* \
@@ -46,6 +47,10 @@ RUN \
     && mkdir -p /var/log/nginx \
     && touch /var/log/nginx/error.log
 
+# Copy Explorer assets and runtime
+COPY --from=explorer /app-root /app-root
+COPY --from=explorer /usr/local/bin/node /usr/local/bin/node
+COPY --from=explorer /usr/local/lib/node_modules /usr/local/lib/node_modules
 
 # Copy root filesystem
 COPY rootfs /
