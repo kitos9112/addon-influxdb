@@ -77,6 +77,10 @@ Enterprise.
 Email address used for Enterprise license verification. Used together with
 `license_type`.
 
+To generate a **home** license, set `license_email` and `license_type: home`
+in the add-on configuration. On first Enterprise start, InfluxDB will send a
+verification email; once verified, the license is generated and stored.
+
 ### Option: `license_file`
 
 Path to a license file (for Enterprise). When provided, it overrides

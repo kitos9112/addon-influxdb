@@ -29,6 +29,8 @@ auth_api: true
 options:
   auth: true
   edition: core
+  license_email: ""
+  license_file: ""
   license_type: home
   ssl: true
   certfile: fullchain.pem
