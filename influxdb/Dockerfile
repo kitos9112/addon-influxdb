@@ -27,10 +27,17 @@ RUN \
         luarocks \
         nginx \
         nodejs \
+        npm \
+        g++ \
+        make \
+        python3 \
+        pkg-config \
+        libsqlite3-dev \
         openssl \
         procps \
     \
     && luarocks install lua-resty-http 0.15-0 \
+    && npm --prefix /app-root/_backend_app install --omit=dev sqlite3 \
     \
     && rm -fr \
         /tmp/* \
