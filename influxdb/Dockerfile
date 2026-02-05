@@ -37,7 +37,6 @@ RUN \
         procps \
     \
     && luarocks install lua-resty-http 0.15-0 \
-    && npm --prefix /app-root/_backend_app install --omit=dev sqlite3 \
     \
     && rm -fr \
         /tmp/* \
@@ -50,6 +49,9 @@ RUN \
 
 # Copy Explorer assets and runtime
 COPY --from=explorer /app-root /app-root
+
+# Install Explorer backend sqlite3 driver (after assets are in place)
+RUN npm --prefix /app-root/_backend_app install --omit=dev sqlite3
 
 # Copy InfluxDB 3 binaries and runtime deps
 COPY --from=core /usr/bin/influxdb3 /usr/local/bin/influxdb3-core

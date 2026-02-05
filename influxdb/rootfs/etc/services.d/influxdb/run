@@ -25,10 +25,10 @@ cluster_id="$(bashio::config 'cluster_id')"
 node_id="$(bashio::config 'node_id')"
 token_file="/data/influxdb3/admin-token.json"
 
-if bashio::var.has_value "${license_email}" || bashio::var.has_value "${license_file}"; then
+if [[ -n "${license_email}" ]] || [[ -n "${license_file}" ]]; then
     edition="enterprise"
 fi
-if ! bashio::var.has_value "${edition}"; then
+if [[ -z "${edition}" ]]; then
     edition="core"
 fi
 

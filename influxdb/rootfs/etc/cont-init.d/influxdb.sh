@@ -28,11 +28,11 @@ edition="$(bashio::config 'edition')"
 license_email="$(bashio::config 'license_email')"
 license_file="$(bashio::config 'license_file')"
 
-if bashio::var.has_value "${license_email}" || bashio::var.has_value "${license_file}"; then
+if [[ -n "${license_email}" ]] || [[ -n "${license_file}" ]]; then
     edition="enterprise"
 fi
 
-if ! bashio::var.has_value "${edition}"; then
+if [[ -z "${edition}" ]]; then
     edition="core"
 fi
 
