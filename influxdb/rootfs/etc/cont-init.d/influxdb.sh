@@ -13,6 +13,7 @@ declare token_plain
 declare admin_token
 declare license_email
 declare license_file
+declare token_value
 
 data_dir="/data/influxdb3"
 token_file="${data_dir}/admin-token.json"
@@ -46,6 +47,9 @@ echo "${edition}" > "${data_dir}/edition"
 
 admin_token="$(bashio::config 'admin_token')"
 if bashio::var.has_value "${admin_token}"; then
+    if [[ ! "${admin_token}" =~ ^apiv3_ ]]; then
+        bashio::exit.nok "Provided admin_token is invalid. It must start with 'apiv3_'."
+    fi
     cat <<EOF > "${token_file}"
 {
   "token": "${admin_token}",
@@ -62,6 +66,32 @@ elif ! bashio::fs.file_exists "${token_file}"; then
         > "${token_plain}"
 fi
 
+if bashio::fs.file_exists "${token_file}"; then
+    token_value="$(grep -oE '"token"[[:space:]]*:[[:space:]]*"[^"]+"' "${token_file}" \
+        | head -n 1 \
+        | sed -E 's/.*"token"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+    if [[ -z "${token_value}" ]]; then
+        bashio::log.warning "Admin token file is empty or malformed; regenerating."
+        influxdb3 create token --admin --offline --output-file "${token_file}" > /dev/null 2>&1
+        token_value="$(grep -oE '"token"[[:space:]]*:[[:space:]]*"[^"]+"' "${token_file}" \
+            | head -n 1 \
+            | sed -E 's/.*"token"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+        echo "${token_value}" > "${token_plain}"
+    elif [[ ! "${token_value}" =~ ^apiv3_ ]]; then
+        if bashio::var.has_value "${admin_token}"; then
+            bashio::exit.nok "Provided admin_token is invalid. It must start with 'apiv3_'."
+        fi
+        bashio::log.warning "Admin token file contains invalid token; regenerating."
+        influxdb3 create token --admin --offline --output-file "${token_file}" > /dev/null 2>&1
+        token_value="$(grep -oE '"token"[[:space:]]*:[[:space:]]*"[^"]+"' "${token_file}" \
+            | head -n 1 \
+            | sed -E 's/.*"token"[[:space:]]*:[[:space:]]*"([^"]+)".*/\1/')"
+        echo "${token_value}" > "${token_plain}"
+    fi
+fi
+
 if ! bashio::fs.file_exists "${token_plain}"; then
     bashio::log.warning "Admin token plaintext file missing; auth may be misconfigured."
 fi
+
+chmod 0600 "${token_file}" "${token_plain}" 2>/dev/null || true
