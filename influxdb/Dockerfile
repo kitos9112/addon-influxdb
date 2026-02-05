@@ -4,6 +4,12 @@ ARG EXPLORER_VERSION="1.6.2"
 FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer
 
 # hadolint ignore=DL3006
+FROM influxdb:3-core AS core
+
+# hadolint ignore=DL3006
+FROM influxdb:3-enterprise AS enterprise
+
+# hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
 # Set shell
@@ -20,26 +26,11 @@ RUN \
         libnginx-mod-http-lua \
         luarocks \
         nginx \
+        nodejs \
         openssl \
         procps \
     \
     && luarocks install lua-resty-http 0.15-0 \
-    \
-    && ARCH="${BUILD_ARCH}" \
-    && if [ "${BUILD_ARCH}" = "aarch64" ]; then ARCH="arm64"; fi \
-    \
-    && mkdir -p /usr/local/bin \
-    && curl -fsSL -o /tmp/influxdb3-core.tar.gz \
-        "https://dl.influxdata.com/influxdb/releases/influxdb3-core-${INFLUXDB3_CORE_VERSION}_linux_${ARCH}.tar.gz" \
-    && mkdir -p /tmp/influxdb3-core \
-    && tar -xzf /tmp/influxdb3-core.tar.gz -C /tmp/influxdb3-core --strip-components=1 \
-    && install -m 0755 /tmp/influxdb3-core/influxdb3 /usr/local/bin/influxdb3-core \
-    \
-    && curl -fsSL -o /tmp/influxdb3-enterprise.tar.gz \
-        "https://dl.influxdata.com/influxdb/releases/influxdb3-enterprise-${INFLUXDB3_ENTERPRISE_VERSION}_linux_${ARCH}.tar.gz" \
-    && mkdir -p /tmp/influxdb3-enterprise \
-    && tar -xzf /tmp/influxdb3-enterprise.tar.gz -C /tmp/influxdb3-enterprise --strip-components=1 \
-    && install -m 0755 /tmp/influxdb3-enterprise/influxdb3 /usr/local/bin/influxdb3-enterprise \
     \
     && rm -fr \
         /tmp/* \
@@ -52,8 +43,11 @@ RUN \
 
 # Copy Explorer assets and runtime
 COPY --from=explorer /app-root /app-root
-COPY --from=explorer /usr/local/bin/node /usr/local/bin/node
-COPY --from=explorer /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+# Copy InfluxDB 3 binaries and runtime deps
+COPY --from=core /usr/bin/influxdb3 /usr/local/bin/influxdb3-core
+COPY --from=enterprise /usr/bin/influxdb3 /usr/local/bin/influxdb3-enterprise
+COPY --from=enterprise /usr/lib/influxdb3/python/lib /usr/lib/influxdb3/python/lib
 
 # Copy root filesystem
 COPY rootfs /
