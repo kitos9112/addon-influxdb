@@ -29,6 +29,11 @@ export SESSION_SECRET_KEY="${session_secret}"
 export DATABASE_URL="/data/explorer/sqlite.db"
 export NODE_ENV="production"
 export PORT="8888"
+export NODE_OPTIONS="--experimental-global-webcrypto"
+export INFLUX_PLUGINS_URL="https://raw.githubusercontent.com/influxdata/influxdb3_plugins/refs/heads/main"
+export INFLUX_PLUGIN_LIST_PATH="library/plugin_library.json"
+export INFLUX_PLUGIN_FOLDER="influxdata"
+export COMMUNITY_PLUGIN_FOLDER=""
 
 bashio::log.info "Starting InfluxDB 3 Explorer backend..."
 exec node /app-root/_backend_app/main.js
