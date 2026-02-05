@@ -13,6 +13,7 @@ declare license_file
 declare license_type
 declare token_file
 declare binary
+declare log_filter
 declare -a args
 
 export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
@@ -37,6 +38,10 @@ if ! bashio::fs.file_exists "${binary}"; then
     bashio::exit.nok "InfluxDB 3 ${edition} binary missing at ${binary}"
 fi
 
+if [[ "${edition}" = "enterprise" ]] && [[ -z "${license_email}" ]] && [[ -z "${license_file}" ]]; then
+    bashio::exit.nok "Enterprise edition selected but no license_email or license_file set."
+fi
+
 args=(serve)
 args+=(--node-id "${node_id:-ha-node}")
 args+=(--object-store file)
@@ -49,6 +54,29 @@ if bashio::config.false 'auth'; then
     args+=(--without-auth)
 else
     args+=(--admin-token-file "${token_file}")
+fi
+
+if bashio::config.has_value 'log_level'; then
+    case "$(bashio::string.lower "$(bashio::config 'log_level')")" in
+        trace)
+            log_filter="trace"
+            ;;
+        debug)
+            log_filter="debug"
+            ;;
+        info|notice)
+            log_filter="info"
+            ;;
+        warning)
+            log_filter="warn"
+            ;;
+        error|fatal)
+            log_filter="error"
+            ;;
+    esac
+    if bashio::var.has_value "${log_filter}"; then
+        args+=(--log-filter "${log_filter}")
+    fi
 fi
 
 if [ "${edition}" = "enterprise" ]; then

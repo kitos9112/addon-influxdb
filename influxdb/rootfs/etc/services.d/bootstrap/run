@@ -23,10 +23,16 @@ else
 fi
 
 for i in {120..0}; do
-    if influxdb3 show databases --format jsonl --token "${token}" > /tmp/influxdb3-dbs.jsonl 2>/dev/null; then
+    if influxdb3 show databases --format jsonl --token "${token}" > /tmp/influxdb3-dbs.jsonl 2>/tmp/influxdb3-dbs.err; then
         break
     fi
-    bashio::log.info "Waiting for InfluxDB 3 to become ready..."
+    if (( i % 5 == 0 )); then
+        if [[ -s /tmp/influxdb3-dbs.err ]]; then
+            bashio::log.info "Waiting for InfluxDB 3 to become ready... ($(head -n 1 /tmp/influxdb3-dbs.err))"
+        else
+            bashio::log.info "Waiting for InfluxDB 3 to become ready..."
+        fi
+    fi
     sleep 2
 done
 
