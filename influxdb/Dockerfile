@@ -31,12 +31,12 @@ RUN \
     && curl -fsSL -o /tmp/influxdb3-core.tar.gz \
         "https://dl.influxdata.com/influxdb/releases/influxdb3-core-${INFLUXDB3_CORE_VERSION}_linux_${ARCH}.tar.gz" \
     && tar -xzf /tmp/influxdb3-core.tar.gz -C /tmp \
-    && install -m 0755 /tmp/influxdb3 /usr/local/bin/influxdb3-core \
+    && install -m 0755 /tmp/influxdb3*/influxdb3 /usr/local/bin/influxdb3-core \
     \
     && curl -fsSL -o /tmp/influxdb3-enterprise.tar.gz \
         "https://dl.influxdata.com/influxdb/releases/influxdb3-enterprise-${INFLUXDB3_ENTERPRISE_VERSION}_linux_${ARCH}.tar.gz" \
     && tar -xzf /tmp/influxdb3-enterprise.tar.gz -C /tmp \
-    && install -m 0755 /tmp/influxdb3 /usr/local/bin/influxdb3-enterprise \
+    && install -m 0755 /tmp/influxdb3*/influxdb3 /usr/local/bin/influxdb3-enterprise \
     \
     && rm -fr \
         /tmp/* \
