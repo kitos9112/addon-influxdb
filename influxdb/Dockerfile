@@ -56,9 +56,9 @@ COPY --from=explorer /app-root /app-root
 RUN npm --prefix /app-root/_backend_app install --omit=dev sqlite3
 
 # Copy InfluxDB 3 binaries and runtime deps
-COPY --from=core /usr/bin/influxdb3 /usr/local/bin/influxdb3-core
-COPY --from=enterprise /usr/bin/influxdb3 /usr/local/bin/influxdb3-enterprise
-COPY --from=enterprise /usr/lib/influxdb3/python/lib /usr/lib/influxdb3/python/lib
+COPY --from=core /usr/bin/influxdb3 /usr/bin/influxdb3-core
+COPY --from=enterprise /usr/bin/influxdb3 /usr/bin/influxdb3-enterprise
+COPY --from=enterprise /usr/lib/influxdb3 /usr/lib/influxdb3
 
 # Copy root filesystem
 COPY rootfs /

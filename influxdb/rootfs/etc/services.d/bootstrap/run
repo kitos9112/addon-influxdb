@@ -5,8 +5,10 @@
 # ==============================================================================
 set -euo pipefail
 
-declare token
 export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
+export PYTHONHOME="/usr/lib/influxdb3/python"
+export PYTHONPATH="/usr/lib/influxdb3/python/lib/python3.13"
+declare token
 declare database
 
 s6-svwait -u -t 5000 /run/service//influxdb

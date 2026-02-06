@@ -17,6 +17,8 @@ declare log_filter
 declare -a args
 
 export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
+export PYTHONHOME="/usr/lib/influxdb3/python"
+export PYTHONPATH="/usr/lib/influxdb3/python/lib/python3.13"
 
 edition="$(bashio::config 'edition')"
 license_email="$(bashio::config 'license_email')"
@@ -33,7 +35,7 @@ if [[ -z "${edition}" ]]; then
     edition="core"
 fi
 
-binary="/usr/local/bin/influxdb3-${edition}"
+binary="/usr/bin/influxdb3-${edition}"
 if ! bashio::fs.file_exists "${binary}"; then
     bashio::exit.nok "InfluxDB 3 ${edition} binary missing at ${binary}"
 fi

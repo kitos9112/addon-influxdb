@@ -15,6 +15,10 @@ declare license_email
 declare license_file
 declare token_value
 
+export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
+export PYTHONHOME="/usr/lib/influxdb3/python"
+export PYTHONPATH="/usr/lib/influxdb3/python/lib/python3.13"
+
 data_dir="/data/influxdb3"
 token_file="${data_dir}/admin-token.json"
 token_plain="${data_dir}/admin-token.txt"
@@ -37,12 +41,12 @@ if [[ -z "${edition}" ]]; then
     edition="core"
 fi
 
-binary="/usr/local/bin/influxdb3-${edition}"
+binary="/usr/bin/influxdb3-${edition}"
 if ! bashio::fs.file_exists "${binary}"; then
     bashio::exit.nok "InfluxDB 3 ${edition} binary missing at ${binary}"
 fi
 
-ln -sf "${binary}" /usr/local/bin/influxdb3
+ln -sf "${binary}" /usr/bin/influxdb3
 echo "${edition}" > "${data_dir}/edition"
 
 admin_token="$(bashio::config 'admin_token')"
