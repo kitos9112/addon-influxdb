@@ -28,7 +28,6 @@ server {
         alias /app-root/_master_app/;
         index index.html;
         sub_filter_once off;
-        sub_filter_types text/html;
         sub_filter '<base href="/">' '<base href="%%ingress_entry%%/">';
         sub_filter '<head>' '<head><base href="%%ingress_entry%%/">';
         sub_filter 'href="/' 'href="%%ingress_entry%%/';
