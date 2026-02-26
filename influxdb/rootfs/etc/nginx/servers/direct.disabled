@@ -28,10 +28,12 @@ server {
         alias /app-root/_master_app/;
         index index.html;
         sub_filter_once off;
+        sub_filter_types application/javascript application/json;
         sub_filter '<base href="/">' '<base href="%%ingress_entry%%/">';
         sub_filter '<head>' '<head><base href="%%ingress_entry%%/">';
         sub_filter 'href="/' 'href="%%ingress_entry%%/';
         sub_filter 'src="/' 'src="%%ingress_entry%%/';
+        sub_filter '/_querytool_app/' '%%ingress_entry%%/_querytool_app/';
         try_files $uri $uri/ /index.html;
     }
 
