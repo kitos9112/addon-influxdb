@@ -27,19 +27,14 @@ server {
         access_by_lua_file /etc/nginx/lua/ha-auth.lua;
         alias /app-root/_master_app/;
         index index.html;
-        sub_filter_once off;
-        sub_filter_types application/javascript application/json;
-        sub_filter '<base href="/">' '<base href="%%ingress_entry%%/">';
-        sub_filter '<head>' '<head><base href="%%ingress_entry%%/">';
-        sub_filter 'href="/' 'href="%%ingress_entry%%/';
-        sub_filter 'src="/' 'src="%%ingress_entry%%/';
-        sub_filter '/_querytool_app/' '%%ingress_entry%%/_querytool_app/';
-        try_files $uri $uri/ /index.html;
+        include /etc/nginx/includes/explorer_subfilter.conf;
+        try_files $uri $uri/ /_master_app/index.html;
     }
 
     location %%ingress_entry%%/_master_app/ {
         access_by_lua_file /etc/nginx/lua/ha-auth.lua;
         alias /app-root/_master_app/;
+        include /etc/nginx/includes/explorer_subfilter.conf;
         try_files $uri $uri/ /_master_app/index.html;
     }
 
@@ -47,6 +42,7 @@ server {
         access_by_lua_file /etc/nginx/lua/ha-auth.lua;
         alias /app-root/_querytool_app/;
         index index.html;
+        include /etc/nginx/includes/explorer_subfilter.conf;
         try_files $uri $uri/ /_querytool_app/index.html;
     }
 
