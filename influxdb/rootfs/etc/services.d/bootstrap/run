@@ -11,9 +11,13 @@ export PYTHONPATH="/usr/lib/influxdb3/python/lib/python3.13"
 declare token
 declare database
 declare host_url
+declare list_url
+declare create_url
 
 s6-svwait -u -t 5000 /run/service//influxdb
 host_url="http://127.0.0.1:8181"
+list_url="${host_url}/api/v3/configure/database?format=json"
+create_url="${host_url}/api/v3/configure/database"
 
 database="$(bashio::config 'default_database')"
 if ! bashio::var.has_value "${database}"; then
@@ -34,7 +38,11 @@ if ! bashio::net.wait_for 8181 localhost 120000; then
 fi
 
 for i in {120..0}; do
-    if influxdb3 show databases --host "${host_url}" --format jsonl --token "${token}" > /tmp/influxdb3-dbs.jsonl 2>/tmp/influxdb3-dbs.err; then
+    if curl --silent --show-error --fail \
+        --header "Authorization: Bearer ${token}" \
+        "${list_url}" \
+        > /tmp/influxdb3-dbs.json \
+        2>/tmp/influxdb3-dbs.err; then
         break
     fi
     if (( i % 5 == 0 )); then
@@ -52,11 +60,17 @@ if [[ "${i}" = 0 ]]; then
     exit 0
 fi
 
-if grep -q "\"name\"[[:space:]]*:[[:space:]]*\"${database}\"" /tmp/influxdb3-dbs.jsonl; then
+if grep -q "\"iox::database\"[[:space:]]*:[[:space:]]*\"${database}\"" /tmp/influxdb3-dbs.json; then
     bashio::log.info "Database '${database}' already exists."
 else
     bashio::log.info "Creating database '${database}'..."
-    influxdb3 create database "${database}" --host "${host_url}" --token "${token}" > /dev/null 2>&1 || \
+    curl --silent --show-error --fail \
+        --request POST \
+        --header "Authorization: Bearer ${token}" \
+        --header "Content-Type: application/json" \
+        --data "{\"db\":\"${database}\"}" \
+        "${create_url}" \
+        > /dev/null 2>&1 || \
         bashio::log.warning "Failed to create database '${database}'."
 fi
 
