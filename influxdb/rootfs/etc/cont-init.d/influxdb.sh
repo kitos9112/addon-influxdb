@@ -11,9 +11,13 @@ declare data_dir
 declare token_file
 declare token_plain
 declare admin_token
+declare node_id
+declare wal_dir
+declare corrupt_wal_dir
 declare license_email
 declare license_file
 declare token_value
+declare -a corrupt_wals
 
 export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
 export PYTHONHOME="/usr/lib/influxdb3/python"
@@ -32,6 +36,7 @@ mkdir -p \
 edition="$(bashio::config 'edition')"
 license_email="$(bashio::config 'license_email')"
 license_file="$(bashio::config 'license_file')"
+node_id="$(bashio::config 'node_id')"
 
 if [[ -n "${license_email}" ]] || [[ -n "${license_file}" ]]; then
     edition="enterprise"
@@ -41,6 +46,10 @@ if [[ -z "${edition}" ]]; then
     edition="core"
 fi
 
+if [[ -z "${node_id}" ]]; then
+    node_id="ha-node"
+fi
+
 binary="/usr/bin/influxdb3-${edition}"
 if ! bashio::fs.file_exists "${binary}"; then
     bashio::exit.nok "InfluxDB 3 ${edition} binary missing at ${binary}"
@@ -48,6 +57,20 @@ fi
 
 ln -sf "${binary}" /usr/bin/influxdb3
 echo "${edition}" > "${data_dir}/edition"
+
+wal_dir="${data_dir}/data/${node_id}/wal"
+corrupt_wal_dir="${data_dir}/corrupt-wal/${node_id}"
+
+if [[ -d "${wal_dir}" ]]; then
+    mapfile -t corrupt_wals < <(find "${wal_dir}" -maxdepth 1 -type f -name '*.wal' -size 0c | sort)
+    if (( ${#corrupt_wals[@]} > 0 )); then
+        mkdir -p "${corrupt_wal_dir}"
+        for wal in "${corrupt_wals[@]}"; do
+            mv "${wal}" "${corrupt_wal_dir}/$(basename "${wal}")"
+        done
+        bashio::log.warning "Moved ${#corrupt_wals[@]} zero-byte WAL file(s) to ${corrupt_wal_dir}."
+    fi
+fi
 
 admin_token="$(bashio::config 'admin_token')"
 if bashio::var.has_value "${admin_token}"; then
