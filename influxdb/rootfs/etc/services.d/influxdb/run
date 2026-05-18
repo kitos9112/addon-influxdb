@@ -14,6 +14,7 @@ declare license_type
 declare token_file
 declare binary
 declare log_filter
+declare nofile_limit
 declare -a args
 
 export LD_LIBRARY_PATH="/usr/lib/influxdb3/python/lib:${LD_LIBRARY_PATH:-}"
@@ -43,6 +44,16 @@ fi
 if [[ "${edition}" = "enterprise" ]] && [[ -z "${license_email}" ]] && [[ -z "${license_file}" ]]; then
     bashio::exit.nok "Enterprise edition selected but no license_email or license_file set."
 fi
+
+nofile_limit="$(ulimit -Hn)"
+if [[ "${nofile_limit}" = "unlimited" ]] || (( nofile_limit > 524288 )); then
+    nofile_limit="524288"
+fi
+
+if ! ulimit -Sn "${nofile_limit}"; then
+    bashio::log.warning "Unable to raise InfluxDB file descriptor limit to ${nofile_limit}"
+fi
+bashio::log.info "InfluxDB file descriptor limit: soft=$(ulimit -Sn), hard=$(ulimit -Hn)"
 
 args=(serve)
 args+=(--node-id "${node_id:-ha-node}")
