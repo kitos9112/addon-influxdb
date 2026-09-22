@@ -28,6 +28,10 @@ FROM influxdb:3.11.5-enterprise AS enterprise
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
+# Make the Python package manager bundled with InfluxDB discoverable by the
+# processing engine. InfluxDB invokes `pip` by name during startup.
+ENV PATH="/usr/lib/influxdb3/python/bin:${PATH}"
+
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -63,6 +67,10 @@ COPY --from=explorer-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=core /usr/bin/influxdb3 /usr/bin/influxdb3-core
 COPY --from=enterprise /usr/bin/influxdb3 /usr/bin/influxdb3-enterprise
 COPY --from=enterprise /usr/lib/influxdb3 /usr/lib/influxdb3
+RUN \
+    test "$(command -v pip)" = "/usr/lib/influxdb3/python/bin/pip" \
+    && test -x /usr/lib/influxdb3/python/bin/pip \
+    && pip --version > /dev/null
 
 # Copy root filesystem
 COPY rootfs /
