@@ -22,6 +22,17 @@ comparison to installing any other Home Assistant add-on.
 1. Check the logs of the "InfluxDB" to see if everything went well.
 1. Click the "OPEN WEB UI" button!
 
+## Upgrading to InfluxDB 3.11
+
+InfluxDB 3.10 and later migrate the on-disk catalog to a new format during
+the first startup. The migration is automatic, but it is one-way: InfluxDB
+3.9 and earlier cannot read the migrated catalog.
+
+Before upgrading from an add-on release that contains InfluxDB 3.9 or
+earlier, create a full Home Assistant backup that includes this add-on's data.
+Do not interrupt the first startup after upgrading. Keep the backup until you
+have confirmed that InfluxDB and the Explorer UI both work with your data.
+
 ## Configuration
 
 **Note**: _Remember to restart the add-on when the configuration is changed._
@@ -226,7 +237,7 @@ check [the contributor's page][contributors].
 
 MIT License
 
-Copyright (c) 2018-2025 Franck Nijhof
+Copyright (c) 2018-2026 Franck Nijhof
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

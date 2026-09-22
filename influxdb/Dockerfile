@@ -1,13 +1,29 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base/amd64:7.7.1
-ARG EXPLORER_VERSION="1.6.2"
+ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base/amd64:9.4.0
+ARG EXPLORER_VERSION="1.9.0"
 # hadolint ignore=DL3006
-FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer
+FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer-source
+
+# Reinstall native Node.js dependencies for glibc; the Explorer image uses musl.
+FROM node:24.11.1-bookworm-slim AS explorer-runtime
+COPY --from=explorer-source /app-root /app-root
+# hadolint ignore=DL3008
+RUN \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
+        g++ \
+        make \
+        python3 \
+    && npm --prefix /app-root/_backend_app ci --omit=dev \
+    && rm -fr \
+        /tmp/* \
+        /root/.npm \
+        /var/lib/apt/lists/*
 
 # hadolint ignore=DL3006
-FROM influxdb:3-core AS core
+FROM influxdb:3.11.5-core AS core
 
 # hadolint ignore=DL3006
-FROM influxdb:3-enterprise AS enterprise
+FROM influxdb:3.11.5-enterprise AS enterprise
 
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
@@ -17,24 +33,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base system
 ARG BUILD_ARCH=amd64
-ARG INFLUXDB3_CORE_VERSION="3.8.0"
-ARG INFLUXDB3_ENTERPRISE_VERSION="3.8.0"
-ARG EXPLORER_VERSION
+# hadolint ignore=DL3008,SC3009
 RUN \
     apt-get update \
     && apt-get install -y --no-install-recommends \
         libnginx-mod-http-lua \
+        libstdc++6 \
         luarocks \
         nginx \
-        nodejs \
-        npm \
-        g++ \
-        make \
-        python3 \
-        python3-pip \
-        python3-venv \
-        pkg-config \
-        libsqlite3-dev \
         openssl \
         procps \
     \
@@ -49,11 +55,9 @@ RUN \
     && mkdir -p /var/log/nginx \
     && touch /var/log/nginx/error.log
 
-# Copy Explorer assets and runtime
-COPY --from=explorer /app-root /app-root
-
-# Install Explorer backend sqlite3 driver (after assets are in place)
-RUN npm --prefix /app-root/_backend_app install --omit=dev sqlite3
+# Copy Explorer assets, glibc-native dependencies, and its matching Node.js runtime
+COPY --from=explorer-runtime /app-root /app-root
+COPY --from=explorer-runtime /usr/local/bin/node /usr/local/bin/node
 
 # Copy InfluxDB 3 binaries and runtime deps
 COPY --from=core /usr/bin/influxdb3 /usr/bin/influxdb3-core

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# < 2 )); then
+    echo "Usage: render-nginx-ingress INGRESS_ENTRY TEMPLATE..." >&2
+    exit 64
+fi
+
+ingress_entry="$1"
+shift
+
+escaped_ingress_entry="${ingress_entry//&/\\&}"
+
+for template in "$@"; do
+    sed -i "s#%%ingress_entry%%#${escaped_ingress_entry}#g" "${template}"
+done

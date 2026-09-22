@@ -28,14 +28,19 @@ if bashio::var.has_value "${port}"; then
         mv /etc/nginx/servers/direct.disabled /etc/nginx/servers/direct.conf
     fi
 
-    sed -i "s#%%ingress_entry%%#${ingress_entry}#g" /etc/nginx/servers/direct.conf
+    render-nginx-ingress \
+        "${ingress_entry}" \
+        /etc/nginx/servers/direct.conf
 fi
 
 ingress_port=$(bashio::addon.ingress_port)
 ingress_interface=$(bashio::addon.ip_address)
 sed -i "s/%%port%%/${ingress_port}/g" /etc/nginx/servers/ingress.conf
 sed -i "s/%%interface%%/${ingress_interface}/g" /etc/nginx/servers/ingress.conf
-sed -i "s#%%ingress_entry%%#${ingress_entry}#g" /etc/nginx/servers/ingress.conf
+render-nginx-ingress \
+    "${ingress_entry}" \
+    /etc/nginx/servers/ingress.conf \
+    /etc/nginx/includes/explorer_subfilter.conf
 
 dns_host=$(bashio::dns.host)
 sed -i "s/%%dns_host%%/${dns_host}/g" /etc/nginx/includes/resolver.conf
