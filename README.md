@@ -29,8 +29,11 @@ A release is created by updating `influxdb/config.yaml` to the intended version,
 merging that change into `main`, and pushing a matching `v<version>` tag. The
 release workflow verifies the tag and CI, publishes the multi-architecture
 [GHCR image](https://github.com/kitos9112/addon-influxdb/pkgs/container/addon-influxdb),
-then creates the GitHub release. For the first release, confirm that the GHCR
-package is public before installing from Home Assistant.
+checks that the image is anonymously accessible for both architectures, then
+creates the GitHub release. GitHub may initially make a new GHCR package
+private. For the first release, set the package to public in GitHub's package
+settings and rerun the failed release job; the workflow will not create the
+GitHub release until that access check passes.
 
 ## Support and contributing
 

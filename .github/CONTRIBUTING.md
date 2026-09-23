@@ -11,5 +11,5 @@ CI checks shell scripts, ingress rendering, and both supported container
 architectures. Please follow the existing code style and update documentation
 when behavior changes.
 
-Follow the [Code of Conduct](CODE_OF_CONDUCT.md) in project discussions.
-Report security issues privately as described in [SECURITY.md](SECURITY.md).
+Keep project discussions respectful. Report security issues privately as
+described in [SECURITY.md](SECURITY.md).

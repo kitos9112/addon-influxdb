@@ -106,6 +106,15 @@ jobs:
             ${{ needs.verify.outputs.version }}
             latest
           registry-prefix: ghcr.io/kitos9112
+      - name: Verify anonymous image access and both architectures
+        env:
+          IMAGE: ghcr.io/kitos9112/addon-influxdb:${{ needs.verify.outputs.version }}
+        run: |
+          docker logout ghcr.io > /dev/null 2>&1 || true
+          docker buildx imagetools inspect --raw "$IMAGE" | jq -e '
+            (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "amd64")) and
+            (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "arm64"))
+          '
 
   github-release:
     needs: [verify, manifest]
