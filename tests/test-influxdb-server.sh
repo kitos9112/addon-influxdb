@@ -14,7 +14,7 @@ container_id="$("${CONTAINER_CLI}" run -d \
     --http-bind 127.0.0.1:8181 \
     --without-auth)"
 
-# shellcheck disable=SC2329 # Called by the EXIT trap.
+# shellcheck disable=SC2317,SC2329 # Called by the EXIT trap.
 cleanup() {
     "${CONTAINER_CLI}" rm -f "${container_id}" > /dev/null 2>&1 || true
 }
