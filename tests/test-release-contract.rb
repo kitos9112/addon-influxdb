@@ -8,13 +8,12 @@ require "tmpdir"
 class ReleaseContractTest < Minitest::Test
   SCRIPT = File.expand_path("check-release-contract.rb", __dir__)
 
-  def config(version: "7.0.0", image: "ghcr.io/kitos9112/addon-influxdb")
+  def config(version: "1.0.0")
     <<~YAML
       name: InfluxDB 3
       version: #{version}
       slug: influxdb
       url: https://github.com/kitos9112/addon-influxdb
-      image: #{image}
       arch:
         - amd64
         - aarch64
@@ -32,18 +31,18 @@ class ReleaseContractTest < Minitest::Test
   def test_valid_metadata
     stdout, stderr, status = check(config)
     assert status.success?, stderr
-    assert_equal "7.0.0\n", stdout
+    assert_equal "1.0.0\n", stdout
   end
 
   def test_wrong_tag_fails
-    _, stderr, status = check(config, "v7.0.1")
+    _, stderr, status = check(config, "v1.0.1")
     refute status.success?
     assert_match(/does not match/, stderr)
   end
 
-  def test_inherited_or_missing_image_fails
-    ["ghcr.io/someone-else/addon-influxdb", ""].each do |image|
-      _, stderr, status = check(config(image: image))
+  def test_image_key_fails_even_when_null
+    ["image: ghcr.io/kitos9112/addon-influxdb", "image: null"].each do |image_line|
+      _, stderr, status = check(config + "#{image_line}\n")
       refute status.success?
       assert_match(/image/, stderr)
     end
