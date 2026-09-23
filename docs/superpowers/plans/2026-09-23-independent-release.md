@@ -48,7 +48,8 @@
 
 **Interfaces:** The README is the entry point for installation; DOCS explains options and migration; GitHub policy files point to current project channels.
 
-- [ ] Enumerate inherited references with `rtk rg -n --hidden -i 'frenck|franck|nijhof|hassio-addons|addons.community|a0d7b954' -g '!/.git' .`.
+- [ ] Enumerate inherited maintainer names, organization links, sponsorship,
+      support contacts, and the old add-on ID throughout the repository.
 - [ ] Replace active links and contacts with this repository. Keep the original copyright line only in `LICENSE.md`; link to that file from docs.
 - [ ] Document adding this GitHub repository to Home Assistant and migrating `local_influxdb` data/settings deliberately before uninstalling the old app.
 - [ ] Remove community repository updater, fundraising, and old release template files that are no longer consumed. Replace Renovate configuration with Dependabot for Docker and GitHub Actions if the latter covers all active dependency manifests.
