@@ -1,4 +1,3 @@
-ARG BUILD_FROM=ghcr.io/hassio-addons/debian-base/amd64:9.4.0
 ARG EXPLORER_VERSION="1.9.0"
 # hadolint ignore=DL3006
 FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer-source
@@ -26,7 +25,7 @@ FROM influxdb:3.11.5-core AS core
 FROM influxdb:3.11.5-enterprise AS enterprise
 
 # hadolint ignore=DL3006
-FROM ${BUILD_FROM}
+FROM ghcr.io/home-assistant/base-debian:trixie-2026.08.0
 
 # Make the Python package manager bundled with InfluxDB discoverable by the
 # processing engine. InfluxDB invokes `pip` by name during startup.
@@ -75,31 +74,23 @@ RUN \
 # Copy root filesystem
 COPY rootfs /
 
-# Build arguments
-ARG BUILD_ARCH
-ARG BUILD_DATE
-ARG BUILD_DESCRIPTION
-ARG BUILD_NAME
-ARG BUILD_REF
-ARG BUILD_REPOSITORY
+# Build arguments provided by the Home Assistant builder
 ARG BUILD_VERSION
 
 # Labels
 LABEL \
-    io.hass.name="${BUILD_NAME}" \
-    io.hass.description="${BUILD_DESCRIPTION}" \
+    io.hass.name="InfluxDB 3" \
+    io.hass.description="InfluxDB 3 for Home Assistant" \
     io.hass.arch="${BUILD_ARCH}" \
-    io.hass.type="addon" \
+    io.hass.type="app" \
     io.hass.version=${BUILD_VERSION} \
-    maintainer="Franck Nijhof <frenck@addons.community>" \
-    org.opencontainers.image.title="${BUILD_NAME}" \
-    org.opencontainers.image.description="${BUILD_DESCRIPTION}" \
-    org.opencontainers.image.vendor="Home Assistant Community Add-ons" \
-    org.opencontainers.image.authors="Franck Nijhof <frenck@addons.community>" \
+    maintainer="Marcos Soutullo <kitos9112@users.noreply.github.com>" \
+    org.opencontainers.image.title="InfluxDB 3" \
+    org.opencontainers.image.description="InfluxDB 3 for Home Assistant" \
+    org.opencontainers.image.vendor="kitos9112" \
+    org.opencontainers.image.authors="Marcos Soutullo <kitos9112@users.noreply.github.com>" \
     org.opencontainers.image.licenses="MIT" \
-    org.opencontainers.image.url="https://addons.community" \
-    org.opencontainers.image.source="https://github.com/${BUILD_REPOSITORY}" \
-    org.opencontainers.image.documentation="https://github.com/${BUILD_REPOSITORY}/blob/main/README.md" \
-    org.opencontainers.image.created=${BUILD_DATE} \
-    org.opencontainers.image.revision=${BUILD_REF} \
+    org.opencontainers.image.url="https://github.com/kitos9112/addon-influxdb" \
+    org.opencontainers.image.source="https://github.com/kitos9112/addon-influxdb" \
+    org.opencontainers.image.documentation="https://github.com/kitos9112/addon-influxdb/blob/main/README.md" \
     org.opencontainers.image.version=${BUILD_VERSION}

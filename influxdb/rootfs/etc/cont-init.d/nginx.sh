@@ -1,6 +1,6 @@
 #!/command/with-contenv bashio
 # ==============================================================================
-# Home Assistant Community Add-on: InfluxDB
+# InfluxDB 3 for Home Assistant
 # Configures NGINX for use with the InfluxDB 3 Explorer
 # ==============================================================================
 declare port

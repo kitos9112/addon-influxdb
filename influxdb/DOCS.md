@@ -1,4 +1,4 @@
-# Home Assistant Community Add-on: InfluxDB
+# InfluxDB 3 for Home Assistant
 
 InfluxDB 3 is a time series database optimized for high-write-volume data such
 as metrics, sensor data, and events. It exposes an HTTP API for client
@@ -9,18 +9,33 @@ and dashboards.
 
 ## Installation
 
-The installation of this add-on is pretty straightforward and not different in
-comparison to installing any other Home Assistant add-on.
+1. In Home Assistant, open **Settings → Add-ons → Add-on Store → Repositories**.
+1. Add `https://github.com/kitos9112/addon-influxdb` and refresh the store.
+1. Select **InfluxDB 3**, install it, then start it.
+1. Check the add-on logs, then select **Open Web UI**.
 
-1. Click the Home Assistant My button below to open the add-on on your Home
-   Assistant instance.
+The container image must be publicly accessible from GHCR. If installation
+fails with an image authorization error, check the
+[package visibility](https://github.com/kitos9112/addon-influxdb/pkgs/container/addon-influxdb).
 
-   [![Open this add-on in your Home Assistant instance.][addon-badge]][addon]
+## Migrating an existing local or community add-on
 
-1. Click the "Install" button to install the add-on.
-1. Start the "InfluxDB" add-on.
-1. Check the logs of the "InfluxDB" to see if everything went well.
-1. Click the "OPEN WEB UI" button!
+This repository's add-on is a separate installation. Home Assistant assigns
+different IDs and `/data` volumes to `local_influxdb`, the former community
+add-on, and this repository's add-on. Installing it will not replace your old
+instance or transfer its data automatically.
+
+Before switching, make a full Home Assistant backup that includes the old
+add-on's data. Save its configuration, InfluxDB token, and any integration
+settings. Stop writers and the old add-on; restore the old add-on's
+`/data/influxdb3` and `/data/explorer` data into the new add-on's corresponding
+volume using a supported Home Assistant backup/restore or copy procedure.
+Then start the new add-on, check its logs and Explorer, and update integrations
+to its new hostname. Do not uninstall the old add-on until the new installation
+has been verified. Never run both add-ons against the same data directory.
+
+InfluxDB 1.x and 2.x data cannot be copied directly into InfluxDB 3; use the
+appropriate export/migration path instead.
 
 ## Upgrading to InfluxDB 3.11
 
@@ -168,7 +183,7 @@ Now we've got this in place, add the following snippet to your Home Assistant
 
 ```yaml
 influxdb:
-  host: a0d7b954-influxdb
+  host: <new-add-on-hostname>
   port: 8181
   database: homeassistant
   username: homeassistant
@@ -178,6 +193,10 @@ influxdb:
 ```
 
 Restart Home Assistant.
+
+Replace `<new-add-on-hostname>` with the hostname displayed by Home Assistant
+for this repository's installed add-on; it is not the old `local_influxdb` or
+`a0d7b954-influxdb` hostname.
 
 You should now see the data flowing into InfluxDB by visiting the web-interface
 and using the Data Explorer.
@@ -211,61 +230,13 @@ based on the following:
 - `MINOR`: Backwards-compatible new features and enhancements.
 - `PATCH`: Backwards-compatible bugfixes and package updates.
 
-## Support
+## Support and license
 
-Got questions?
+For add-on support, open an
+[issue](https://github.com/kitos9112/addon-influxdb/issues). For private
+vulnerability reports, use the repository's
+[security policy](../.github/SECURITY.md). The code is MIT-licensed; see
+[LICENSE.md](../LICENSE.md) for the original attribution.
 
-You have several options to get them answered:
-
-- The [Home Assistant Community Add-ons Discord chat server][discord] for add-on
-  support and feature requests.
-- The [Home Assistant Discord chat server][discord-ha] for general Home
-  Assistant discussions and questions.
-- The Home Assistant [Community Forum][forum].
-- Join the [Reddit subreddit][reddit] in [/r/homeassistant][reddit]
-
-You could also [open an issue here][issue] GitHub.
-
-## Authors & contributors
-
-The original setup of this repository is by [Franck Nijhof][frenck].
-
-For a full list of all authors and contributors,
-check [the contributor's page][contributors].
-
-## License
-
-MIT License
-
-Copyright (c) 2018-2026 Franck Nijhof
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-[addon-badge]: https://my.home-assistant.io/badges/supervisor_addon.svg
-[addon]: https://my.home-assistant.io/redirect/supervisor_addon/?addon=a0d7b954_influxdb&repository_url=https%3A%2F%2Fgithub.com%2Fhassio-addons%2Frepository
-[contributors]: https://github.com/hassio-addons/addon-influxdb/graphs/contributors
-[discord-ha]: https://discord.gg/c5DvZ4e
-[discord]: https://discord.me/hassioaddons
-[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg
-[forum]: https://community.home-assistant.io/t/home-assistant-community-add-on-influxdb/54491?u=frenck
-[frenck]: https://github.com/frenck
-[issue]: https://github.com/hassio-addons/addon-influxdb/issues
-[reddit]: https://reddit.com/r/homeassistant
-[releases]: https://github.com/hassio-addons/addon-influxdb/releases
+[releases]: https://github.com/kitos9112/addon-influxdb/releases
 [semver]: https://semver.org/spec/v2.0.0.html

@@ -1,6 +1,6 @@
 #!/command/with-contenv bashio
 # ==============================================================================
-# Home Assistant Community Add-on: InfluxDB 3
+# InfluxDB 3 for Home Assistant
 # Prepare InfluxDB 3 runtime and bootstrap admin token
 # ==============================================================================
 set -euo pipefail

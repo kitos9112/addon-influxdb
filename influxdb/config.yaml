@@ -1,9 +1,10 @@
 ---
-name: InfluxDB
-version: dev
+name: InfluxDB 3
+version: 7.0.0
 slug: influxdb
 description: Scalable datastore for metrics, events, and real-time analytics
-url: https://github.com/hassio-addons/addon-influxdb
+url: https://github.com/kitos9112/addon-influxdb
+image: ghcr.io/kitos9112/addon-influxdb
 ingress: true
 ingress_port: 1337
 ingress_stream: true

@@ -4,21 +4,92 @@ name: CI
 # yamllint disable-line rule:truthy
 on:
   push:
+    branches: [main]
   pull_request:
-    types:
-      - opened
-      - reopened
-      - synchronize
   workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
 
 jobs:
-  ingress-rendering:
-    runs-on: ubuntu-latest
+  checks:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
-      - name: Test ingress template rendering
-        run: tests/test-render-nginx-ingress.sh
+        with:
+          persist-credentials: false
+      - name: Install linters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck yamllint
+      - name: Check add-on metadata
+        id: metadata
+        run: |
+          version="$(ruby tests/check-release-contract.rb influxdb/config.yaml)"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Test release contract
+        run: ruby tests/test-release-contract.rb
+      - name: Lint YAML
+        run: |
+          yamllint -d '{extends: default, rules: {line-length: disable, document-start: disable}}' repository.yaml influxdb/config.yaml .github
+      - name: Lint shell scripts
+        run: |
+          shellcheck -s bash tests/*.sh influxdb/rootfs/etc/cont-init.d/*.sh influxdb/rootfs/etc/services.d/*/run influxdb/rootfs/etc/services.d/*/finish influxdb/rootfs/usr/local/bin/render-nginx-ingress
+      - name: Test ingress rendering
+        run: bash tests/test-render-nginx-ingress.sh
+      - name: Lint GitHub Actions
+        run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12
+      - name: Lint Dockerfile
+        uses: hadolint/hadolint-action@v3.4.0
+        with:
+          dockerfile: influxdb/Dockerfile
+      - name: Prepare architecture matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          image-name: addon-influxdb
+          registry-prefix: ghcr.io/kitos9112
 
-  workflows:
-    uses: hassio-addons/workflows/.github/workflows/addon-ci.yaml@main
+  build:
+    name: Build and test ${{ matrix.arch }}
+    needs: checks
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.checks.outputs.matrix) }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build image without publishing
+        uses: home-assistant/builder/actions/build-image@2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: ./influxdb
+          image: ${{ matrix.image }}
+          image-tags: ${{ needs.checks.outputs.version }}
+          version: ${{ needs.checks.outputs.version }}
+          labels: |
+            io.hass.type=app
+            io.hass.name=InfluxDB 3
+          cosign: false
+          load: true
+          push: false
+      - name: Check InfluxDB bundled Python runtime
+        env:
+          CONTAINER_CLI: docker
+          IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
+        run: bash tests/test-influxdb-python-runtime.sh "$IMAGE"
+      - name: Check InfluxDB server startup
+        env:
+          CONTAINER_CLI: docker
+          IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
+        run: bash tests/test-influxdb-server.sh "$IMAGE"

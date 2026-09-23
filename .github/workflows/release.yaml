@@ -1,0 +1,124 @@
+---
+name: Release
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    tags:
+      - 'v[0-9]*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    if: github.repository == 'kitos9112/addon-influxdb'
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.metadata.outputs.version }}
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Verify version and tag
+        id: metadata
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          version="$(ruby tests/check-release-contract.rb influxdb/config.yaml "$RELEASE_TAG")"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Verify tag is on main
+        run: git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+
+  ci:
+    needs: verify
+    uses: ./.github/workflows/ci.yaml
+    permissions:
+      contents: read
+
+  matrix:
+    needs: verify
+    runs-on: ubuntu-24.04
+    outputs:
+      build: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Prepare architecture matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          image-name: addon-influxdb
+          registry-prefix: ghcr.io/kitos9112
+
+  build:
+    name: Publish ${{ matrix.arch }}
+    needs: [verify, ci, matrix]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.matrix.outputs.build) }}
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build, publish, and sign image
+        uses: home-assistant/builder/actions/build-image@2026.06.0
+        with:
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          context: ./influxdb
+          image: ${{ matrix.image }}
+          image-tags: |
+            ${{ needs.verify.outputs.version }}
+            latest
+          version: ${{ needs.verify.outputs.version }}
+          labels: |
+            io.hass.type=app
+            io.hass.name=InfluxDB 3
+          push: true
+          cosign: true
+
+  manifest:
+    needs: [verify, build]
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+      id-token: write
+    steps:
+      - name: Publish and sign multi-architecture image
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@2026.06.0
+        with:
+          architectures: '["amd64", "aarch64"]'
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: addon-influxdb
+          image-tags: |
+            ${{ needs.verify.outputs.version }}
+            latest
+          registry-prefix: ghcr.io/kitos9112
+
+  github-release:
+    needs: [verify, manifest]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out tagged commit
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: gh release create "$RELEASE_TAG" --verify-tag --generate-notes --title "InfluxDB 3 ${RELEASE_TAG#v}"
