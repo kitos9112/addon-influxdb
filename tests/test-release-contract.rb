@@ -4,6 +4,7 @@
 require "minitest/autorun"
 require "open3"
 require "tmpdir"
+require "yaml"
 
 class ReleaseContractTest < Minitest::Test
   SCRIPT = File.expand_path("check-release-contract.rb", __dir__)
@@ -58,5 +59,19 @@ class ReleaseContractTest < Minitest::Test
     _, stderr, status = check(config.sub("  - aarch64\n", ""))
     refute status.success?
     assert_match(/arch/, stderr)
+  end
+
+  def test_release_workflow_publishes_source_only_after_ci
+    path = File.expand_path("../.github/workflows/release.yaml", __dir__)
+    workflow = YAML.safe_load(File.read(path))
+    jobs = workflow.fetch("jobs")
+
+    assert_equal %w[ci github-release verify], jobs.keys.sort
+    assert_equal %w[ci verify], jobs.fetch("github-release").fetch("needs").sort
+    assert_equal "write", jobs.fetch("github-release").fetch("permissions").fetch("contents")
+    ([workflow] + jobs.values).each do |scope|
+      refute scope.fetch("permissions", {}).key?("packages")
+      refute scope.fetch("permissions", {}).key?("id-token")
+    end
   end
 end

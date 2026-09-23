@@ -42,82 +42,8 @@ jobs:
     permissions:
       contents: read
 
-  matrix:
-    needs: verify
-    runs-on: ubuntu-24.04
-    outputs:
-      build: ${{ steps.matrix.outputs.matrix }}
-    steps:
-      - name: Prepare architecture matrix
-        id: matrix
-        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@2026.06.0
-        with:
-          architectures: '["amd64", "aarch64"]'
-          image-name: addon-influxdb
-          registry-prefix: ghcr.io/kitos9112
-
-  build:
-    name: Publish ${{ matrix.arch }}
-    needs: [verify, ci, matrix]
-    runs-on: ${{ matrix.os }}
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-    strategy:
-      fail-fast: false
-      matrix: ${{ fromJSON(needs.matrix.outputs.build) }}
-    steps:
-      - name: Check out tagged commit
-        uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - name: Build, publish, and sign image
-        uses: home-assistant/builder/actions/build-image@2026.06.0
-        with:
-          arch: ${{ matrix.arch }}
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          context: ./influxdb
-          image: ${{ matrix.image }}
-          image-tags: |
-            ${{ needs.verify.outputs.version }}
-            latest
-          version: ${{ needs.verify.outputs.version }}
-          labels: |
-            io.hass.type=app
-            io.hass.name=InfluxDB 3
-          push: true
-          cosign: true
-
-  manifest:
-    needs: [verify, build]
-    runs-on: ubuntu-24.04
-    permissions:
-      packages: write
-      id-token: write
-    steps:
-      - name: Publish and sign multi-architecture image
-        uses: home-assistant/builder/actions/publish-multi-arch-manifest@2026.06.0
-        with:
-          architectures: '["amd64", "aarch64"]'
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          image-name: addon-influxdb
-          image-tags: |
-            ${{ needs.verify.outputs.version }}
-            latest
-          registry-prefix: ghcr.io/kitos9112
-      - name: Verify anonymous image access and both architectures
-        env:
-          IMAGE: ghcr.io/kitos9112/addon-influxdb:${{ needs.verify.outputs.version }}
-        run: |
-          anonymous_config="$(mktemp -d)"
-          DOCKER_CONFIG="$anonymous_config" docker buildx imagetools inspect --raw "$IMAGE" | jq -e '
-            (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "amd64")) and
-            (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "arm64"))
-          '
-
   github-release:
-    needs: [verify, manifest]
+    needs: [verify, ci]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
