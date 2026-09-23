@@ -50,7 +50,7 @@ jobs:
           dockerfile: influxdb/Dockerfile
       - name: Prepare architecture matrix
         id: matrix
-        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@2026.06.0
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@2026.09.0
         with:
           architectures: '["amd64", "aarch64"]'
           image-name: addon-influxdb
@@ -69,7 +69,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Build image without publishing
-        uses: home-assistant/builder/actions/build-image@2026.06.0
+        uses: home-assistant/builder/actions/build-image@2026.09.0
         with:
           arch: ${{ matrix.arch }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
