@@ -15,7 +15,8 @@ In Home Assistant, open **Settings → Add-ons → Add-on Store → Repositories
 add `https://github.com/kitos9112/addon-influxdb`. Refresh the store, select
 **InfluxDB 3**, install it, then start it and open its web UI. See the
 [configuration and migration guide](influxdb/DOCS.md) before replacing an
-existing InfluxDB add-on.
+existing InfluxDB add-on. Installation requires a published, public GHCR image
+for the version in `influxdb/config.yaml`; check the releases page first.
 
 This is an independent repository. Its add-on has a different Home Assistant ID
 and data volume from `local_influxdb` and the former community add-on. Adding

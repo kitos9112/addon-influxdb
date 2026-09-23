@@ -110,8 +110,8 @@ jobs:
         env:
           IMAGE: ghcr.io/kitos9112/addon-influxdb:${{ needs.verify.outputs.version }}
         run: |
-          docker logout ghcr.io > /dev/null 2>&1 || true
-          docker buildx imagetools inspect --raw "$IMAGE" | jq -e '
+          anonymous_config="$(mktemp -d)"
+          DOCKER_CONFIG="$anonymous_config" docker buildx imagetools inspect --raw "$IMAGE" | jq -e '
             (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "amd64")) and
             (.manifests | any(.[]; .platform.os == "linux" and .platform.architecture == "arm64"))
           '
