@@ -68,10 +68,33 @@ class ReleaseContractTest < Minitest::Test
 
     assert_equal %w[ci github-release verify], jobs.keys.sort
     assert_equal %w[ci verify], jobs.fetch("github-release").fetch("needs").sort
-    assert_equal "write", jobs.fetch("github-release").fetch("permissions").fetch("contents")
+    assert_equal({ "contents" => "read" }, workflow.fetch("permissions"))
+    assert_equal({ "contents" => "read" }, jobs.fetch("ci").fetch("permissions"))
+    refute jobs.fetch("verify").key?("permissions")
+    assert_equal({ "contents" => "write" }, jobs.fetch("github-release").fetch("permissions"))
     ([workflow] + jobs.values).each do |scope|
       refute scope.fetch("permissions", {}).key?("packages")
       refute scope.fetch("permissions", {}).key?("id-token")
     end
+  end
+
+  def test_ci_build_does_not_push_images
+    path = File.expand_path("../.github/workflows/ci.yaml", __dir__)
+    workflow = YAML.safe_load(File.read(path))
+    steps = workflow.fetch("jobs").fetch("build").fetch("steps")
+    build = steps.find { |step| step.fetch("uses", "").include?("/build-image@") }
+
+    refute_nil build
+    assert_equal false, build.fetch("with").fetch("push")
+  end
+
+  def test_release_job_has_only_source_release_steps
+    path = File.expand_path("../.github/workflows/release.yaml", __dir__)
+    workflow = YAML.safe_load(File.read(path))
+    steps = workflow.fetch("jobs").fetch("github-release").fetch("steps")
+
+    assert_equal ["Check out tagged commit", "Create GitHub release"], steps.map { |step| step.fetch("name") }
+    assert_equal "actions/checkout@v7.0.1", steps.first.fetch("uses")
+    assert_match(/\Agh release create [^\n]+\z/, steps.last.fetch("run").strip)
   end
 end
