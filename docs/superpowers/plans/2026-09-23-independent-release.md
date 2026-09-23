@@ -1,5 +1,7 @@
 # Independent InfluxDB Add-on Release Implementation Plan
 
+> Superseded for v1.0.0 publication by [the source-only release plan](2026-09-23-source-only-v1-release.md).
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Turn this checkout into an independently maintained, installable Home Assistant add-on repository with a verified first release.

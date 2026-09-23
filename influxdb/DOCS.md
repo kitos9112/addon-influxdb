@@ -14,9 +14,12 @@ and dashboards.
 1. Select **InfluxDB 3**, install it, then start it.
 1. Check the add-on logs, then select **Open Web UI**.
 
-The container image must be publicly accessible from GHCR. If installation
-fails with an image authorization error, check the
-[package visibility](https://github.com/kitos9112/addon-influxdb/pkgs/container/addon-influxdb).
+Home Assistant builds this add-on's container on your own machine; no prebuilt
+image is published by this repository. Installation and updates take longer
+and use more CPU, disk space, and disk writes than downloading a prebuilt
+image. The build needs network access to upstream image registries and package
+repositories. If it fails, check the build log for an unavailable upstream
+dependency before starting the add-on.
 
 ## Migrating an existing local or community add-on
 
@@ -235,8 +238,13 @@ based on the following:
 For add-on support, open an
 [issue](https://github.com/kitos9112/addon-influxdb/issues). For private
 vulnerability reports, use the repository's
-[security policy](../.github/SECURITY.md). The code is MIT-licensed; see
-[LICENSE.md](../LICENSE.md) for the original attribution.
+[security policy](../.github/SECURITY.md). The add-on source is MIT-licensed; see
+[LICENSE.md](../LICENSE.md) for the original and current attributions. InfluxDB
+3 and Explorer have separate upstream licenses; the repository's MIT license
+does not cover their binaries or UI assets.
+Review the upstream terms before installing, including the Enterprise
+[At-Home license](https://www.influxdata.com/legal/influxdata-end-user-software-license-agreement/)
+and Explorer's `/app-root/license.txt` in its upstream container image.
 
 [releases]: https://github.com/kitos9112/addon-influxdb/releases
 [semver]: https://semver.org/spec/v2.0.0.html

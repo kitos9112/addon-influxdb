@@ -1,5 +1,6 @@
 # MIT License
 
+Copyright (c) 2026 Marcos Soutullo
 Copyright (c) 2018-2025 Franck Nijhof
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

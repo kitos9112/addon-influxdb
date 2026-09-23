@@ -89,7 +89,6 @@ LABEL \
     org.opencontainers.image.description="InfluxDB 3 for Home Assistant" \
     org.opencontainers.image.vendor="kitos9112" \
     org.opencontainers.image.authors="Marcos Soutullo <kitos9112@users.noreply.github.com>" \
-    org.opencontainers.image.licenses="MIT" \
     org.opencontainers.image.url="https://github.com/kitos9112/addon-influxdb" \
     org.opencontainers.image.source="https://github.com/kitos9112/addon-influxdb" \
     org.opencontainers.image.documentation="https://github.com/kitos9112/addon-influxdb/blob/main/README.md" \
