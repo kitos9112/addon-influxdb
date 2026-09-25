@@ -7,6 +7,8 @@ REPOSITORY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPOSITORY_ROOT
 
 test_root="$(mktemp -d)"
+# NGINX workers run as an unprivileged user inside the container.
+chmod 755 "${test_root}"
 container_id=""
 
 # shellcheck disable=SC2317,SC2329 # Called by the EXIT trap.
