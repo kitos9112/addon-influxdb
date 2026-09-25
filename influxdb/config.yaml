@@ -1,6 +1,6 @@
 ---
 name: InfluxDB 3
-version: 1.0.0
+version: 1.0.1
 slug: influxdb
 description: Scalable datastore for metrics, events, and real-time analytics
 url: https://github.com/kitos9112/addon-influxdb
