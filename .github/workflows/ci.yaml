@@ -93,6 +93,11 @@ jobs:
           CONTAINER_CLI: docker
           IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
         run: bash tests/test-nginx-wasm-mime.sh "$IMAGE"
+      - name: Check Explorer ingress router basename
+        env:
+          CONTAINER_CLI: docker
+          IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
+        run: bash tests/test-explorer-router-basename.sh "$IMAGE"
       - name: Check InfluxDB server startup
         env:
           CONTAINER_CLI: docker
