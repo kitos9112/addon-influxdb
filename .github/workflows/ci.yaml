@@ -98,6 +98,11 @@ jobs:
           CONTAINER_CLI: docker
           IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
         run: bash tests/test-explorer-router-basename.sh "$IMAGE"
+      - name: Check Explorer Terms through ingress
+        env:
+          CONTAINER_CLI: docker
+          IMAGE: ${{ matrix.image }}:${{ needs.checks.outputs.version }}
+        run: bash tests/test-explorer-terms-license.sh "$IMAGE"
       - name: Check InfluxDB server startup
         env:
           CONTAINER_CLI: docker
