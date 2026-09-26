@@ -3,7 +3,7 @@ ARG EXPLORER_VERSION="1.9.0"
 FROM influxdata/influxdb3-ui:${EXPLORER_VERSION} AS explorer-source
 
 # Reinstall native Node.js dependencies for glibc; the Explorer image uses musl.
-FROM node:24.11.1-bookworm-slim AS explorer-runtime
+FROM node:26.9.0-bookworm-slim AS explorer-runtime
 COPY --from=explorer-source /app-root /app-root
 # hadolint ignore=DL3008
 RUN \
