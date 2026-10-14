@@ -25,7 +25,7 @@ FROM influxdb:3.11.5-core AS core
 FROM influxdb:3.11.5-enterprise AS enterprise
 
 # hadolint ignore=DL3006
-FROM ghcr.io/home-assistant/base-debian:trixie-2026.08.0
+FROM ghcr.io/home-assistant/base-debian:trixie-2026.10.0
 
 # Make the Python package manager bundled with InfluxDB discoverable by the
 # processing engine. InfluxDB invokes `pip` by name during startup.
