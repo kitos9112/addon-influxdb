@@ -4,7 +4,19 @@ updates:
     directory: /influxdb
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 1
+    groups:
+      automerge-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 1
+    groups:
+      automerge-minor-patch:
+        patterns: ["*"]
+        update-types: [minor, patch]
