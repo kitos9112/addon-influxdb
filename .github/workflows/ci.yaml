@@ -45,7 +45,7 @@ jobs:
       - name: Lint GitHub Actions
         run: docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12
       - name: Lint Dockerfile
-        uses: hadolint/hadolint-action@v3.4.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: influxdb/Dockerfile
       - name: Prepare architecture matrix
