@@ -19,10 +19,10 @@ RUN \
         /var/lib/apt/lists/*
 
 # hadolint ignore=DL3006
-FROM influxdb:3.12.1-core AS core
+FROM influxdb:3.12.2-core AS core
 
 # hadolint ignore=DL3006
-FROM influxdb:3.12.1-enterprise AS enterprise
+FROM influxdb:3.12.2-enterprise AS enterprise
 
 # hadolint ignore=DL3006
 FROM ghcr.io/home-assistant/base-debian:trixie-2026.10.3
